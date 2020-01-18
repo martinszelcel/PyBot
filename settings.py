@@ -1,10 +1,13 @@
+# Database name
 DATABASE = 'discord.db'
+
+# Discord Bot Token
 DISCORD_TOKEN = 'NjY2MzA3MDc2NDI2OTU2ODAx.XhyRhA.GJEUs9DW1H-tOIwUs1A_BMnmvgQ'
 
-# Channels on with users will gain EXP
-ALLOWED_CHANNELS_ID=[666298091657363469, ]
+# Channels on which users will gain EXP
+ALLOWED_CHANNELS_ID=[668215628666241055, 666298091657363469]
 
-# EXP for single message
+# EXP for single message sended
 MESSAGE_EXP=10
 
 # Reaction emojis that gives message authors EXP
@@ -18,6 +21,7 @@ EMOJIS=[
 ("👍", 10),
 ("👎", -10),
 ("python_logo", 20),
+("🍉", 50)
 ]
 
 LEVELS=[
