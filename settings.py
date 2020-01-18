@@ -1,3 +1,6 @@
+DATABASE = 'discord.db'
+DISCORD_TOKEN = 'NjY2MzA3MDc2NDI2OTU2ODAx.XhyRhA.GJEUs9DW1H-tOIwUs1A_BMnmvgQ'
+
 # Channels on with users will gain EXP
 ALLOWED_CHANNELS_ID=[666298091657363469, ]
 
