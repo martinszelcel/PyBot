@@ -6,7 +6,7 @@ def reset_users_exp():
     User.update(exp=0).execute()
 
 
-async def recalculate_all_exp(client):
+async def calculate_all_exp(client):
     for guild in client.guilds:
         for channel in guild.channels:
             if channel.type == discord.ChannelType.text and channel.id in ALLOWED_CHANNELS_ID:
