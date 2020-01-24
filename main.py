@@ -1,7 +1,8 @@
 import discord
 import sys, traceback
 from discord.ext import commands
-from settings import DISCORD_TOKEN, ADMIN_ROLE, ERROR_LOG_PM_USER_ID
+from settings import ADMIN_ROLE, ERROR_LOG_PM_USER_ID
+from tokens import DISCORD_TOKEN
 
 bot = commands.Bot(command_prefix='!')
 

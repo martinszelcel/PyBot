@@ -8,16 +8,28 @@ class SettingsCog(commands.Cog):
 
     @commands.command(name='settings')
     @commands.has_role(ADMIN_ROLE)
-    async def level(self, ctx, *, setting: str=None):
-        embed = discord.Embed()
+    async def settings(self, ctx, setting=None, value=None):
+        embed = discord.Embed(title="Settings")
 
         if not setting:
-            embed.add_field(name="**Settigns**", value=f"""
-                **Message exp:** *{MESSAGE_EXP}*
-                **Error log user:** *{ERROR_LOG_PM_USER_ID}*
-                **Allowed channels:** *{ALLOWED_CHANNELS_ID}*
-                **Emojis:** *{EMOJIS}*
-            """)
+            for cog_key in self.bot.cogs.keys():
+                cog_settings = ""
+                for cog in self.bot.cogs[cog_key]:
+                    cog_setting += "Test"
+
+                embed.add_field(name=f"**{cog}**", value=cog_settings")
+
+                # embed.add_field(name=f"**{cog}**", value=f"""
+                #     **Message exp:** *{MESSAGE_EXP}*
+                #     **Error log user:** *{ERROR_LOG_PM_USER_ID}*
+                #     **Allowed channels:** *{ALLOWED_CHANNELS_ID}*
+                #     **Emojis:** *{EMOJIS}*
+                # """)
+        
+        if setting == "msg_exp":
+            embed.add_field(name="Message exp", value=f"Changed to {value}")
+
+        print(self.bot.cogs)
 
         await ctx.send(embed=embed)
 

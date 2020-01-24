@@ -1,5 +1,5 @@
 import discord
-from peewee import *
+from peewee import Model, IntegerField, CharField, SqliteDatabase
 from settings import DATABASE, LEVEL_EXPONENT, LEVEL_BASE_EXP
 import math
 
@@ -82,7 +82,18 @@ class User(Model):
         user.save()
         return user
 
-class Message():
+class Setting(Model):
+    id = IntegerField(primary_key=True)
+    name = CharField()
+    display_name = CharField()
+    value = IntegerField()
+
+    class Meta:
+        database = db
+        table_name = "settings"
+
+
+class Message:
     messages = {}
 
     def __init__(self, id, user_id, is_bot=False, is_command=False, exp=0):
