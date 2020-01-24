@@ -4,8 +4,8 @@ EXP_RESET = "Reseting all users experience. It will be calulated again in a mome
 EXP_CALCULATION = "Calculating EXP for all users using messages from channels history..."
 INITIALIZATION_DONE = "All calculations done."
 
-# Allowed variables: {user_name} {user_exp} {user_level} {message_author}
-LEVEL_COMMAND_RESPONSE = "{user_name} has {user_exp}EXP/-EXP. {user_name} is now on level {user_level}. Nice job!"
+# Allowed variables: {user_name} {user_exp} {user_level} {message_author} {user_next_level_exp}
+LEVEL_COMMAND_RESPONSE = "{user_name} has {user_exp}EXP/{user_next_level_exp}EXP. {user_name} is now on level {user_level}. Nice job!"
 
 # Allowed variables: {user_name} {exp_got}/{exp_lost} {user_exp} {user_level} {reason}
 USER_GOT_EXP = "{user_name} has got {exp_got}EXP {reason}. {user_name} has now {user_exp}EXP!"
@@ -19,4 +19,4 @@ FOR_LOSING_A_REACTION = "for losing a reaction"
 FOR_REACTIONS_REMOVED = "beacuse of all reactions removed"
 
 # Allowed variables: {message_author}
-LEVEL_BOT_RESPONSE = "Sorry {author}! Levels are only for normal users."
+LEVEL_BOT_RESPONSE = ":x: Sorry {message_author}! Levels are only for normal users."

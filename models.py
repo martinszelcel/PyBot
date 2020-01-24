@@ -1,5 +1,7 @@
+import discord
 from peewee import *
-from settings import DATABASE, LEVELS
+from settings import DATABASE, LEVEL_EXPONENT, LEVEL_BASE_EXP
+import math
 
 db = SqliteDatabase(DATABASE)
 
@@ -13,45 +15,54 @@ class User(Model):
         database = db
         table_name = "users"
 
-    def add_exp(self, exp):
-        # Get all higher levels from settings
-        higher_levels = list(filter(lambda tup: tup[0] > self.level, LEVELS))
+    @staticmethod
+    def get_level_exp(level):
+        return math.floor(LEVEL_BASE_EXP * (level ** LEVEL_EXPONENT))
+
+    async def add_exp(self, exp, messageable = None):
         # Add exp to self
         self.exp += exp
 
-        if len(higher_levels) > 0:
-            # Assing to variables next higher level
-            level, exp_needed = higher_levels[0]
-            # If user has enough exp change his level to higher
-            if self.exp >= exp_needed:
-                self.change_level(level)
+        # Calculate next level exp
+        next_level_exp = User.get_level_exp(self.level + 1)
 
-    def remove_exp(self,exp):
-        # Get user level from settings (as a list)
-        level_now = list(filter(lambda tup: tup[0] == self.level, LEVELS))
+        while self.exp >= next_level_exp:
+            # If user has enough exp change his level to higher
+            if self.exp >= next_level_exp:
+                await self.level_up(messageable)
+
+            # Calculate again user next level exp
+            next_level_exp = User.get_level_exp(self.level + 1)
+
+    async def remove_exp(self, exp, messageable = None):
         # Remove exp from self
         self.exp -= exp
 
-        if len(level_now) > 0:
-            # Assing to variables next lower level
-            level, exp_needed = level_now[0]
+        # Calculate user level exp
+        level_now_exp = User.get_level_exp(self.level)
+
+        while self.exp < level_now_exp:
             # If user has too low exp for this level change his level to lower
-            if self.exp < exp_needed:
-                self.change_level(level - 1)
+            if self.exp < level_now_exp:
+                await self.level_down(messageable)
 
-    def change_level(self, level):
-        # Change level
-        self.level = level
+            # Calculate again user level exp
+            level_now_exp = User.get_level_exp(self.level)
 
-        # Print message
-        if level > self.level:
-            print(f"Congratulations {self.name}! Your level now is {level}!")
-        elif level < self.level:
-            print(f"Sorry {self.name}... Your level now is {level}")
+    async def level_up(self, messageable = None):
+        self.level += 1
+        if messageable:
+            embed = discord.Embed(title=f"Congratulations {self.name}! Your level now is {self.level}!")
+            await messageable.send(embed=embed)
 
+    async def level_down(self, messageable = None):
+        self.level -= 1
+        if messageable:
+            embed = discord.Embed(title=f"Sorry {self.name}... Your level now is {self.level}")
+            await messageable.send(embed=embed)
 
     @staticmethod
-    def get_or_create_and_add_exp(id, exp, name=None):
+    async def get_or_create_and_add_exp(id, exp, name=None, messageable=None):
         ''' First the user is got from db or created if it doesn't exist. Next amount of exp is added or removed from this user.
         If name is supplied, the user name will be changed to it.
         Returns User instance.
@@ -60,9 +71,9 @@ class User(Model):
         user, created = User.get_or_create(id=id)
         # Add or remove exp if exp is negative number
         if exp > 0:
-            user.add_exp(exp)
+            await user.add_exp(exp, messageable)
         else:
-            user.remove_exp(abs(exp))
+            await user.remove_exp(abs(exp), messageable)
 
         # If name is supplied change it
         if name is not None:
@@ -74,11 +85,12 @@ class User(Model):
 class Message():
     messages = {}
 
-    def __init__(self, id, user_id, is_bot, exp=0):
+    def __init__(self, id, user_id, is_bot=False, is_command=False, exp=0):
         self.id = id
         self.exp = exp
         self.user_id = user_id
         self.is_bot = is_bot
+        self.is_command = is_command
         Message.messages[id] = self
 
     @staticmethod
@@ -88,3 +100,7 @@ class Message():
     @staticmethod
     def pop(id):
         return Message.messages.pop(id)
+
+    @staticmethod
+    def is_command(message, bot):
+        return True if len(message.content) > len(bot.command_prefix) and message.content[:len(bot.command_prefix)] == bot.command_prefix else False
