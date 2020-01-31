@@ -1,0 +1,7 @@
+env/
+venv/
+.vscode/
+__pycache__/
+*.py[cod]
+tokens.py
+discord.db
