@@ -3,5 +3,5 @@ venv/
 .vscode/
 __pycache__/
 *.py[cod]
-tokens.py
+TOKENS.INI
 discord.db

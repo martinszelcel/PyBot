@@ -1,9 +1,8 @@
 import discord
 from peewee import Model, IntegerField, CharField, SqliteDatabase
-from settings import DATABASE, LEVEL_EXPONENT, LEVEL_BASE_EXP
+from settings import LEVEL_EXPONENT, LEVEL_BASE_EXP
+from main import db
 import math
-
-db = SqliteDatabase(DATABASE)
 
 class User(Model):
     id = IntegerField(primary_key=True)
@@ -104,3 +103,5 @@ class Message:
     @staticmethod
     def is_command(message, bot):
         return True if len(message.content) > len(bot.command_prefix) and message.content[:len(bot.command_prefix)] == bot.command_prefix else False
+
+db.create_tables([User])
