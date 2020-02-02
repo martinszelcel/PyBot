@@ -48,7 +48,7 @@ class ExperienceCog(commands.Cog, name="Experience"):
 
         # Add fields for 10 best users
         for index, user in enumerate(User.select().order_by(-User.exp).limit(10)):
-            embed.add_field(name="Level {level}    {exp}EXP/{next_level_exp}EXP".format(level=user.level, exp=user.exp, next_level_exp=User.get_level_exp(user.level + 1)), value="**{number} {name}**".format(number=get_number_emoji(index + 1), name=user.name, level=user.level, exp=user.exp), inline=False)
+            embed.add_field(name="Level {level}    {exp}EXP/{next_level_exp}EXP".format(level=user.level, exp=user.exp, next_level_exp=User.get_level_exp(user.level + 1)), value="**{number} {name}**".format(number=get_number_emoji(index + 1, medals=True), name=user.name, level=user.level, exp=user.exp), inline=False)
         # Send generated embed
         await ctx.send(embed=embed)
 

@@ -5,9 +5,12 @@ from settings import ALLOWED_CHANNELS_ID, MESSAGE_EXP, EMOJIS
 def reset_users_exp():
     User.update(exp=0).execute()
 
-def get_number_emoji(number):
+def get_number_emoji(number, medals=False):
     emojis = [':zero:',':one:', ':two:', ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:", ":keycap_ten:"]
-    if number > 10:
+    medal_emojis = [':first_place:', ':second_place:', ":third_place:"]
+    if number <= 3 and medals:
+        result = medal_emojis[number - 1]
+    elif number > 10:
         number = str(number)
         result = ""
         for digit in number:
