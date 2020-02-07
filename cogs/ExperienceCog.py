@@ -52,6 +52,17 @@ class ExperienceCog(commands.Cog, name="Experience"):
         # Send generated embed
         await ctx.send(embed=embed)
 
+    @commands.command(name='reactions', aliases=['emojis'])
+    async def reactions(self, ctx):
+        # Create embed
+        embed = discord.Embed(title="<:python_logo:666314420254933013> Reactions that give/take EXP:", color=0xfed142)
+
+        # List all emojis and their EXP
+        for emoji, exp in EMOJIS:
+            embed.add_field(name="‏‏‎ ‎", value=f"{emoji} {exp}EXP", inline=False)
+        # Send generated embed
+        await ctx.send(embed=embed)
+
     @commands.command(name='recalculate')
     @commands.has_role(ADMIN_ROLE)
     async def recalculate_exp(self, ctx):
@@ -120,8 +131,8 @@ class ExperienceCog(commands.Cog, name="Experience"):
             valid_emoji = list(filter(lambda tup: emoji in tup, EMOJIS))
             # Get message from cache
             message = Message.get(payload.message_id)
-            # Check if message is no command, and the author is not a bot
-            if valid_emoji and not message.is_bot and not message.is_command:
+            # Check if message is no command, the author is not a bot, and it is not message author reaction
+            if valid_emoji and not message.is_bot and not message.is_command and message.user_id != payload.user_id:
                 # Update message and author exp
                 emoji, exp = valid_emoji[0]
                 user = await User.get_or_create_and_add_exp(id=message.user_id, exp=exp)
@@ -140,8 +151,8 @@ class ExperienceCog(commands.Cog, name="Experience"):
             valid_emoji = list(filter(lambda tup: emoji in tup, EMOJIS))
             # Get message from cache
             message = Message.get(payload.message_id)
-            # Check if message is no command, and the author is not a bot
-            if valid_emoji and not message.is_bot and not message.is_command:
+            # Check if message is no command, the author is not a bot, and it is not message author reaction
+            if valid_emoji and not message.is_bot and not message.is_command and message.user_id != payload.user_id:
                 # Update message and author exp
                 emoji, exp = valid_emoji[0]
                 user = await User.get_or_create_and_add_exp(id=message.user_id, exp=-exp)
