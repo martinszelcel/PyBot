@@ -26,7 +26,7 @@ async def reload(ctx):
 
 @bot.command(name="version", aliases=["v"])
 async def version(ctx):
-    embed = discord.Embed(title=f"Version: **{VERSION}**")
+    embed = discord.Embed(title=f"Version: **{VERSION}**", color=0x0cc974)
     await ctx.send(embed=embed)
 
 @bot.event
