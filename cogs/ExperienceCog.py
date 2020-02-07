@@ -1,13 +1,45 @@
 import discord
 from discord.ext import commands
-from utils import reset_users_exp, calculate_all_exp, get_number_emoji
-from models import User, Message
-from settings import ALLOWED_CHANNELS_ID, MESSAGE_EXP, EMOJIS, ADMIN_ROLE
+from utils.ExperienceUtils import reset_users_exp, calculate_all_exp
+from utils.MainUtils import get_number_emoji
+from models.ExperienceModels import User, Message
+from main import settings as main_settings, lang as main_lang
+from tinydb import where
+from settings import ADMIN_ROLE
 import importlib
 from lang import experience as lang
 
+NAME = "Experience"
 
-class ExperienceCog(commands.Cog, name="Experience"):
+settings = main_settings.table(NAME)
+lang_new = main_lang.table(NAME)
+
+default_settings = {
+    'message_exp': 10,
+    'exp_channels': ['*'],
+    'exp_emojis': [
+        {
+            'name': '👍',
+            'display': '👍',
+            'exp': 10,
+        },
+        {
+            'name': '👎',
+            'display': '👎',
+            'exp': -5,
+        },
+        {
+            'name': 'python_logo',
+            'display': '<:python_logo:666314420254933013>',
+            'exp': 15,
+        },
+    ],
+    'base_level_exp': 100,
+    'level_exponent': 2,
+}
+
+
+class ExperienceCog(commands.Cog, name=NAME):
     def __init__(self, bot):
         self.bot = bot
 
@@ -55,11 +87,12 @@ class ExperienceCog(commands.Cog, name="Experience"):
     @commands.command(name='reactions', aliases=['emojis'])
     async def reactions(self, ctx):
         # Create embed
-        embed = discord.Embed(title="<:python_logo:666314420254933013> Reactions that give/take EXP:", color=0xfed142)
+        embed = discord.Embed(title="Reactions that give/take EXP:", color=0xfed142)
 
         # List all emojis and their EXP
-        for emoji, exp in EMOJIS:
-            embed.add_field(name="‏‏‎ ‎", value=f"{emoji} {exp}EXP", inline=False)
+        list = ""
+        for emoji in settings.get(where('key') == 'exp_emojis')['value']:
+            embed.add_field(name="‏‏‎ ‎", value=f"{emoji['display']} {emoji['exp']}EXP", inline=False)
         # Send generated embed
         await ctx.send(embed=embed)
 
@@ -81,20 +114,22 @@ class ExperienceCog(commands.Cog, name="Experience"):
     @commands.Cog.listener('on_message')
     async def new_message(self, message):
         # Check if the message channel is in the list
-        if message.channel.id in ALLOWED_CHANNELS_ID:
+        exp_channels = settings.get(where('key') == 'exp_channels')['value']
+        if message.channel.id in exp_channels or '*' in exp_channels:
             # Create new message model
             message_model = Message(id=message.id, user_id=message.author.id, is_bot=message.author.bot, is_command=Message.is_command(message, self.bot))
             # Check if message is no command, and the author is not a bot
             if not message.author.bot and not message_model.is_command:
                 # Add exp to message and user
-                message_model.exp += MESSAGE_EXP
+                message_model.exp += settings.get(where('key') == 'message_exp')['value']
                 user = await User.get_or_create_and_add_exp(id=message.author.id, exp=message_model.exp, name=message.author.display_name)
                 print(lang.USER_GOT_EXP.format(user_name=user.name, user_exp=user.exp, user_level=user.level, exp_got=message_model.exp, reason=lang.FOR_WRITING_MESSAGE_REASON))
 
     @commands.Cog.listener('on_raw_message_delete')
     async def message_removed(self, payload):
         # Check if the message channel is in the list
-        if payload.channel_id in ALLOWED_CHANNELS_ID:
+        exp_channels = settings.get(where('key') == 'exp_channels')['value']
+        if payload.channel_id in exp_channels or '*' in exp_channels:
             # Pop message from cache
             message = Message.pop(payload.message_id)
             # Check if message is no command, and the author is not a bot
@@ -109,7 +144,8 @@ class ExperienceCog(commands.Cog, name="Experience"):
     @commands.Cog.listener('on_raw_bulk_message_delete')
     async def bulk_message_removed(self, payload):
         # Check if the message channel is in the list
-        if payload.channel_id in ALLOWED_CHANNELS_ID:
+        exp_channels = settings.get(where('key') == 'exp_channels')['value']
+        if payload.channel_id in exp_channels or '*' in exp_channels:
             for message_id in payload.message_ids:
                 # Pop message from cache
                 message = Message.pop(message_id)
@@ -125,16 +161,18 @@ class ExperienceCog(commands.Cog, name="Experience"):
     @commands.Cog.listener('on_raw_reaction_add')
     async def new_reaction(self, payload):
         # Check if the message channel is in the list
-        if payload.channel_id in ALLOWED_CHANNELS_ID:
+        exp_channels = settings.get(where('key') == 'exp_channels')['value']
+        if payload.channel_id in exp_channels or '*' in exp_channels:
             emoji = payload.emoji.name
             # Check if emoji is in list
-            valid_emoji = list(filter(lambda tup: emoji in tup, EMOJIS))
+            exp_emojis = settings.get(where('key') == 'exp_emojis')['value']
+            valid_emoji = list(filter(lambda elem: emoji in elem["name"], exp_emojis))
             # Get message from cache
             message = Message.get(payload.message_id)
             # Check if message is no command, the author is not a bot, and it is not message author reaction
             if valid_emoji and not message.is_bot and not message.is_command and message.user_id != payload.user_id:
                 # Update message and author exp
-                emoji, exp = valid_emoji[0]
+                exp = valid_emoji[0]["exp"]
                 user = await User.get_or_create_and_add_exp(id=message.user_id, exp=exp)
                 message.exp += exp
                 if exp > 0:
@@ -145,16 +183,18 @@ class ExperienceCog(commands.Cog, name="Experience"):
     @commands.Cog.listener('on_raw_reaction_remove')
     async def reaction_removed(self, payload):
         # Check if the message channel is in the list
-        if payload.channel_id in ALLOWED_CHANNELS_ID:
+        exp_channels = settings.get(where('key') == 'exp_channels')['value']
+        if payload.channel_id in exp_channels or '*' in exp_channels:
             emoji = payload.emoji.name
             # Check if emoji is in list
-            valid_emoji = list(filter(lambda tup: emoji in tup, EMOJIS))
+            exp_emojis = settings.get(where('key') == 'exp_emojis')['value']
+            valid_emoji = list(filter(lambda elem: emoji in elem["name"], exp_emojis))
             # Get message from cache
             message = Message.get(payload.message_id)
             # Check if message is no command, the author is not a bot, and it is not message author reaction
             if valid_emoji and not message.is_bot and not message.is_command and message.user_id != payload.user_id:
                 # Update message and author exp
-                emoji, exp = valid_emoji[0]
+                exp = valid_emoji[0]["exp"]
                 user = await User.get_or_create_and_add_exp(id=message.user_id, exp=-exp)
                 message.exp -= exp
                 if exp > 0:
@@ -165,20 +205,26 @@ class ExperienceCog(commands.Cog, name="Experience"):
     @commands.Cog.listener('on_raw_reaction_clear')
     async def reactions_cleared(self, payload):
         # Check if the message channel is in the list
-        if payload.channel_id in ALLOWED_CHANNELS_ID:
+        exp_channels = settings.get(where('key') == 'exp_channels')['value']
+        if payload.channel_id in exp_channels or '*' in exp_channels:
             # Get message from cache
             message = Message.get(payload.message_id)
             # Check if message is no command, and the author is not a bot
             if not message.is_bot and not message.is_command:
                 # Update message and author exp
-                exp = message.exp - MESSAGE_EXP
+                exp = message.exp - settings.get(where('key') == 'message_exp')['value']
                 user = await User.get_or_create_and_add_exp(id=message.user_id, exp=-exp)
-                message.exp = MESSAGE_EXP
+                message.exp = settings.get(where('key') == 'message_exp')['value']
                 if exp > 0:
                     print(lang.USER_LOST_EXP.format(user_name=user.name, user_exp=user.exp, user_level=user.level, exp_lost=exp, reason=lang.FOR_REACTIONS_REMOVED))
                 else:
                     print(lang.USER_GOT_EXP.format(user_name=user.name, user_exp=user.exp, user_level=user.level, exp_got=exp, reason=lang.FOR_REACTIONS_REMOVED))
 
 def setup(bot):
-    importlib.reload(lang)
+    for default_setting_key in default_settings.keys():
+        setting = settings.get(where('key') == default_setting_key)
+        if not setting:
+            settings.insert({'key': default_setting_key, 'value': default_settings[default_setting_key]})
+
+    #importlib.reload(lang)
     bot.add_cog(ExperienceCog(bot))

@@ -6,5 +6,6 @@ discord.py==1.2.5
 idna==2.8
 multidict==4.7.4
 peewee==3.13.1
+tinydb==3.15.2
 websockets==6.0
 yarl==1.4.2

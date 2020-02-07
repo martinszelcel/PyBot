@@ -1,8 +1,13 @@
 import discord
 from peewee import Model, IntegerField, CharField, SqliteDatabase
 from settings import LEVEL_EXPONENT, LEVEL_BASE_EXP
-from main import db
+from main import db, settings as main_settings
+from tinydb import where
 import math
+
+NAME = "Experience"
+
+settings = main_settings.table(NAME)
 
 class User(Model):
     id = IntegerField(primary_key=True)
@@ -16,7 +21,7 @@ class User(Model):
 
     @staticmethod
     def get_level_exp(level):
-        return math.floor(LEVEL_BASE_EXP * (level ** LEVEL_EXPONENT))
+        return math.floor(settings.get(where('key') == 'base_level_exp')['value'] * (level ** settings.get(where('key') == 'level_exponent')['value']))
 
     async def add_exp(self, exp, messageable = None):
         # Add exp to self

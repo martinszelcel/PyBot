@@ -2,13 +2,22 @@ import discord
 import sys, traceback
 from discord.ext import commands
 from peewee import SqliteDatabase
-from settings import ADMIN_ROLE, ERROR_LOG_PM_USER_ID, DATABASE
+from tinydb import TinyDB, where
+from settings import ADMIN_ROLE
 import configparser
 
 bot = commands.Bot(command_prefix='!')
-db = SqliteDatabase(DATABASE)
+db = SqliteDatabase('discord.db')
 
-VERSION = "PyBot v0.0.1b Prelease"
+settings = TinyDB('settings.json', default_table='main')
+lang = TinyDB('lang.json', default_table='main')
+
+VERSION = "PyBot v0.0.2 [DEV]"
+
+default_settings = {
+    'developer_error_user_id': 388808298226253827,
+    'administration_roles': ["Admin"]
+}
 
 @bot.event
 async def on_ready():
@@ -26,7 +35,7 @@ async def reload(ctx):
 
 @bot.command(name="version", aliases=["v"])
 async def version(ctx):
-    embed = discord.Embed(title=f"Version: **{VERSION}**")
+    embed = discord.Embed(title=f"Version: **{VERSION}**", color=0x0cc974)
     await ctx.send(embed=embed)
 
 @bot.event
@@ -39,7 +48,7 @@ async def on_command_error(ctx, error):
 @bot.event
 async def on_error(event, *args, **kwargs):
     # Generate error embed and send it to developer
-    user = bot.get_user(ERROR_LOG_PM_USER_ID)
+    user = bot.get_user(settings.get(where('key') == 'developer_error_user_id')["value"])
     embed = discord.Embed(title=f":broken_heart: Exception raised in {event} function.", color=0xc95351)
     type, value, tb = sys.exc_info()
     embed.add_field(name=f"{str(type)}    {str(value)}", value=''.join(traceback.format_exc()), inline=False)
@@ -95,6 +104,11 @@ if __name__ == '__main__':
                     config.set('TOKENS', 'DISCORD_TOKEN', 'TOKEN_HERE')
                     config.write(configfile)
                     sys.exit()
+
+    for default_setting_key in default_settings.keys():
+        setting = settings.get(where('key') == default_setting_key)
+        if not setting:
+            settings.insert({'key': default_setting_key, 'value': default_settings[default_setting_key]})
 
     for extension in extensions:
         bot.load_extension(extension)
