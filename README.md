@@ -1,6 +1,6 @@
 # PyBot
 
-PyBot is a Discord Bot written in Python library [discord.py](https://github.com/Rapptz/discord.py) developed especially for [PyLearn](https://discord.gg/cdVYNrk) Discord Server. 
+PyBot is a Discord Bot written in Python using [discord.py](https://github.com/Rapptz/discord.py) library. This bot is developed especially for [PyLearn](https://discord.gg/cdVYNrk) Discord Server. 
 
 ## Setup
 
