@@ -8,7 +8,7 @@ import configparser
 bot = commands.Bot(command_prefix='!')
 db = SqliteDatabase(DATABASE)
 
-VERSION = "PyBot v0.0.1b Prelease"
+VERSION = "PyBot v0.0.1"
 
 @bot.event
 async def on_ready():
